@@ -95,6 +95,9 @@ void CalcAdvFlux(const MultiFab& cons_in,
         const Box& bx = mfi.tilebox();
 
         // Loop over the cells and compute fluxes
+        const bool AdvectionTerm_density=true;
+        const bool AdvectionTerm_theta=true;
+        const bool AdvectionTerm_scalar=true;
         amrex::ParallelFor(tbx, tby, tbz,
         [=] AMREX_GPU_DEVICE (int i, int j, int k) {
 
@@ -104,13 +107,13 @@ void CalcAdvFlux(const MultiFab& cons_in,
             Real scalar = 0.5 * (cons(i,j,k, Scalar_comp) + cons(i-1,j,k, Scalar_comp));
 
             // Density flux
-            xflux(i,j,k,Density_comp) = rho * velx(i,j,k);
+            xflux(i,j,k,Density_comp) = AdvectionTerm_density * rho * velx(i,j,k);
 
             // Theta: conservative flux is (rho u theta)
-            xflux(i,j,k,Theta_comp)   = rho * theta * velx(i,j,k);
+            xflux(i,j,k,Theta_comp)   = AdvectionTerm_theta * rho * theta * velx(i,j,k);
 
             // Scalar: conservative flux is (rho u s)
-            xflux(i,j,k,Scalar_comp)  = rho * scalar * velx(i,j,k);
+            xflux(i,j,k,Scalar_comp)  = AdvectionTerm_scalar * rho * scalar * velx(i,j,k);
 
             xgrad_scalar(i,j,k,Density_comp) = (cons(i,j,k,Density_comp) - cons(i-1,j,k,Density_comp)) / dx[0];
             xgrad_scalar(i,j,k,  Theta_comp) = (cons(i,j,k,  Theta_comp) - cons(i-1,j,k,  Theta_comp)) / dx[0];
@@ -125,13 +128,13 @@ void CalcAdvFlux(const MultiFab& cons_in,
             Real scalar = 0.5 * (cons(i,j,k, Scalar_comp) + cons(i,j-1,k, Scalar_comp));
 
             // Density
-            yflux(i,j,k,Density_comp) += rho * vely(i,j,k);
+            yflux(i,j,k,Density_comp) += AdvectionTerm_density * rho * vely(i,j,k);
 
             // Theta: conservative flux is (rho u theta)
-            yflux(i,j,k,Theta_comp) = rho * theta * vely(i,j,k);
+            yflux(i,j,k,Theta_comp) = AdvectionTerm_theta * rho * theta * vely(i,j,k);
 
             // Scalar: conservative flux is (rho u s)
-            yflux(i,j,k,Scalar_comp) =  rho * scalar * vely(i,j,k);
+            yflux(i,j,k,Scalar_comp) =  AdvectionTerm_scalar * rho * scalar * vely(i,j,k);
 
             ygrad_scalar(i,j,k,Density_comp) = (cons(i,j,k,Density_comp) - cons(i,j-1,k,Density_comp)) / dx[1];
             ygrad_scalar(i,j,k,  Theta_comp) = (cons(i,j,k,  Theta_comp) - cons(i,j-1,k,  Theta_comp)) / dx[1];
@@ -146,13 +149,13 @@ void CalcAdvFlux(const MultiFab& cons_in,
             Real scalar = 0.5 * (cons(i,j,k, Scalar_comp) + cons(i,j,k-1, Scalar_comp));
 
             // Density
-            zflux(i,j,k,Density_comp) += rho * velz(i,j,k);
+            zflux(i,j,k,Density_comp) += AdvectionTerm_density * rho * velz(i,j,k);
 
             // Theta: conservative flux is (rho u theta)
-            zflux(i,j,k,Theta_comp) = rho * theta * velz(i,j,k);
+            zflux(i,j,k,Theta_comp) = AdvectionTerm_theta * rho * theta * velz(i,j,k);
 
             // Scalar: conservative flux is (rho u s)
-            zflux(i,j,k,Scalar_comp) =  rho * scalar * velz(i,j,k);
+            zflux(i,j,k,Scalar_comp) =  AdvectionTerm_scalar * rho * scalar * velz(i,j,k);
 
             zgrad_scalar(i,j,k,Density_comp) = (cons(i,j,k,Density_comp) - cons(i,j,k-1,Density_comp)) / dx[2];
             zgrad_scalar(i,j,k,  Theta_comp) = (cons(i,j,k,  Theta_comp) - cons(i,j,k-1,  Theta_comp)) / dx[2];
@@ -160,29 +163,30 @@ void CalcAdvFlux(const MultiFab& cons_in,
         }
         );
 
+            // berger Equation? pressure term is neglected.
+            const bool PressureTerm=false;
+            const bool AdvectionTerm_vel=true;
             amrex::ParallelFor(bx_xy, bx_xz, bx_yz,
             [=] AMREX_GPU_DEVICE (int i, int j, int k) {
-                edgey_u(i,j,k) = 0.25*(momx(i,j-1,k)+momx(i,j,k))*(vely(i-1,j,k)+vely(i,j,k));
-                edgex_v(i,j,k) = 0.25*(momy(i-1,j,k)+momy(i,j,k))*(velx(i,j-1,k)+velx(i,j,k));
+                edgey_u(i,j,k) = AdvectionTerm_vel * 0.25*(momx(i,j-1,k)+momx(i,j,k))*(vely(i-1,j,k)+vely(i,j,k));
+                edgex_v(i,j,k) = AdvectionTerm_vel * 0.25*(momy(i-1,j,k)+momy(i,j,k))*(velx(i,j-1,k)+velx(i,j,k));
             },
             [=] AMREX_GPU_DEVICE (int i, int j, int k) {
-                edgez_u(i,j,k) = 0.25*(momx(i,j,k-1)+momx(i,j,k))*(velz(i-1,j,k)+velz(i,j,k));
-                edgex_w(i,j,k) = 0.25*(momz(i-1,j,k)+momz(i,j,k))*(velx(i,j,k-1)+velx(i,j,k));
+                edgez_u(i,j,k) = AdvectionTerm_vel * 0.25*(momx(i,j,k-1)+momx(i,j,k))*(velz(i-1,j,k)+velz(i,j,k));
+                edgex_w(i,j,k) = AdvectionTerm_vel * 0.25*(momz(i-1,j,k)+momz(i,j,k))*(velx(i,j,k-1)+velx(i,j,k));
             },
             [=] AMREX_GPU_DEVICE (int i, int j, int k) {
-                edgez_v(i,j,k) = 0.25*(momy(i,j,k-1)+momy(i,j,k))*(velz(i,j-1,k)+velz(i,j,k));
-                edgey_w(i,j,k) = 0.25*(momz(i,j-1,k)+momz(i,j,k))*(vely(i,j,k-1)+vely(i,j,k));
+                edgez_v(i,j,k) = AdvectionTerm_vel * 0.25*(momy(i,j,k-1)+momy(i,j,k))*(velz(i,j-1,k)+velz(i,j,k));
+                edgey_w(i,j,k) = AdvectionTerm_vel * 0.25*(momz(i,j-1,k)+momz(i,j,k))*(vely(i,j,k-1)+vely(i,j,k));
             });
 
-            // berger Equation? pressure term is neglected.
-            const bool bergerEq=false;
             amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
                 Real rho   = cons(i,j,k,Density_comp);
                 Real theta = cons(i,j,k,  Theta_comp);
                 Real pressure = getPgivenRTh(rho,theta);
-                cenx_u(i,j,k) = 0.25*(momx(i,j,k)+momx(i+1,j,k))*(velx(i,j,k)+velx(i+1,j,k)) + pressure * bergerEq;
-                ceny_v(i,j,k) = 0.25*(momy(i,j,k)+momy(i,j+1,k))*(vely(i,j,k)+vely(i,j+1,k)) + pressure * bergerEq;
-                cenz_w(i,j,k) = 0.25*(momz(i,j,k)+momz(i,j,k+1))*(velz(i,j,k)+velz(i,j,k+1)) + pressure * bergerEq;
+                cenx_u(i,j,k) = AdvectionTerm_vel * 0.25*(momx(i,j,k)+momx(i+1,j,k))*(velx(i,j,k)+velx(i+1,j,k)) + pressure * (1-PressureTerm);
+                ceny_v(i,j,k) = AdvectionTerm_vel * 0.25*(momy(i,j,k)+momy(i,j+1,k))*(vely(i,j,k)+vely(i,j+1,k)) + pressure * (1-PressureTerm);
+                cenz_w(i,j,k) = AdvectionTerm_vel * 0.25*(momz(i,j,k)+momz(i,j,k+1))*(velz(i,j,k)+velz(i,j,k+1)) + pressure * (1-PressureTerm);
             });
 
     } // end mfi
