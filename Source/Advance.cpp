@@ -85,7 +85,7 @@ ERF::advance(Real time, Real dt, int amr_iteration, int amr_ncycle)
 
   // Place-holder for alpha array -- scalar diffusivity
   MultiFab alpha(ba,dm,1,1); 
-  alpha.setVal(0.1);
+  alpha.setVal(2.0);
 
   //fluxes (except momentum) at faces
   std::array< MultiFab, AMREX_SPACEDIM > faceflux;
@@ -131,6 +131,12 @@ ERF::advance(Real time, Real dt, int amr_iteration, int amr_ncycle)
   //          W_new    (z-velocity on z-faces)
   // *****************************************************************
 
+  // reverse flow
+  if ((time + 1e-7) > 0.8 && true)
+  {
+    dt = -dt;
+    amrex::Print() << "Advancing with -dt!!!! " << dt << std::endl;
+  }
   RK3_advance(S_old, S_new, 
               U_old, V_old, W_old,
               U_new, V_new, W_new, 

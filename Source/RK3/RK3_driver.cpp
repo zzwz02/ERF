@@ -337,6 +337,10 @@ void RK3_advance(MultiFab& cons_old,  MultiFab& cons_new,
     // Convert new momentum to new velocity on faces
     // 
     // ************************************************************************************** 
+    xmom_new.FillBoundary(geom.periodicity());
+    ymom_new.FillBoundary(geom.periodicity());
+    zmom_new.FillBoundary(geom.periodicity());
+
     cons_new.FillBoundary(geom.periodicity());
     MomentumToVelocity(xvel_new, yvel_new, zvel_new, cons_new, xmom_new, ymom_new, zmom_new);
 }

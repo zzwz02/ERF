@@ -174,13 +174,15 @@ void CalcAdvFlux(const MultiFab& cons_in,
                 edgey_w(i,j,k) = 0.25*(momz(i,j-1,k)+momz(i,j,k))*(vely(i,j,k-1)+vely(i,j,k));
             });
 
+            // berger Equation? pressure term is neglected.
+            const bool bergerEq=false;
             amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
                 Real rho   = cons(i,j,k,Density_comp);
                 Real theta = cons(i,j,k,  Theta_comp);
                 Real pressure = getPgivenRTh(rho,theta);
-                cenx_u(i,j,k) = 0.25*(momx(i,j,k)+momx(i+1,j,k))*(velx(i,j,k)+velx(i+1,j,k)) + pressure;
-                ceny_v(i,j,k) = 0.25*(momy(i,j,k)+momy(i,j+1,k))*(vely(i,j,k)+vely(i,j+1,k)) + pressure;
-                cenz_w(i,j,k) = 0.25*(momz(i,j,k)+momz(i,j,k+1))*(velz(i,j,k)+velz(i,j,k+1)) + pressure;
+                cenx_u(i,j,k) = 0.25*(momx(i,j,k)+momx(i+1,j,k))*(velx(i,j,k)+velx(i+1,j,k)) + pressure * bergerEq;
+                ceny_v(i,j,k) = 0.25*(momy(i,j,k)+momy(i,j+1,k))*(vely(i,j,k)+vely(i,j+1,k)) + pressure * bergerEq;
+                cenz_w(i,j,k) = 0.25*(momz(i,j,k)+momz(i,j,k+1))*(velz(i,j,k)+velz(i,j,k+1)) + pressure * bergerEq;
             });
 
     } // end mfi

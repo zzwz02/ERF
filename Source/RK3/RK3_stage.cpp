@@ -138,6 +138,7 @@ void RK3_stage  (MultiFab& cons_old,  MultiFab& cons_upd,
                     -dt*(edgey_u(i,j+1,k) - edgey_u(i,j,k))/dx[1]
                     -dt*(edgez_u(i,j,k+1) - edgez_u(i,j,k))/dx[2]
                     +0.5*dt*grav_gpu[0]*(cu_old(i-1,j,k,0)+cu_old(i,j,k,0));
+            //mompx(i,j,k) = 0.;        
         },
         [=] AMREX_GPU_DEVICE (int i, int j, int k) {
             mompy(i,j,k) = 
@@ -145,6 +146,7 @@ void RK3_stage  (MultiFab& cons_old,  MultiFab& cons_upd,
                     -dt*(ceny_v(i,j,k) - ceny_v(i,j-1,k))/dx[1]
                     -dt*(edgez_v(i,j,k+1) - edgez_v(i,j,k))/dx[2]
                     +0.5*dt*grav_gpu[1]*(cu_old(i,j-1,k,0)+cu_old(i,j,k,0));
+            //mompy(i,j,k) = 0.;
         },
         [=] AMREX_GPU_DEVICE (int i, int j, int k) {
             mompz(i,j,k) = 
@@ -152,6 +154,7 @@ void RK3_stage  (MultiFab& cons_old,  MultiFab& cons_upd,
                     -dt*(edgey_w(i,j+1,k) - edgey_w(i,j,k))/dx[1]
                     -dt*(cenz_w(i,j,k) - cenz_w(i,j,k-1))/dx[2] 
                     +0.5*dt*grav_gpu[2]*(cu_old(i,j,k-1,0)+cu_old(i,j,k,0));
+            //mompz(i,j,k) = 0.;
         });
     }
 }

@@ -1,1 +1,3 @@
 add_subdirectory(ScalarAdvection)
+add_subdirectory(ScalarDiffusion)
+add_subdirectory(TaylorGreen)
