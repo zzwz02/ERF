@@ -164,7 +164,7 @@ void CalcAdvFlux(const MultiFab& cons_in,
         );
 
             // berger Equation? pressure term is neglected.
-            const bool PressureTerm=false;
+            const bool PressureTerm=true;
             const bool AdvectionTerm_vel=true;
             amrex::ParallelFor(bx_xy, bx_xz, bx_yz,
             [=] AMREX_GPU_DEVICE (int i, int j, int k) {
@@ -184,9 +184,9 @@ void CalcAdvFlux(const MultiFab& cons_in,
                 Real rho   = cons(i,j,k,Density_comp);
                 Real theta = cons(i,j,k,  Theta_comp);
                 Real pressure = getPgivenRTh(rho,theta);
-                cenx_u(i,j,k) = AdvectionTerm_vel * 0.25*(momx(i,j,k)+momx(i+1,j,k))*(velx(i,j,k)+velx(i+1,j,k)) + pressure * (1-PressureTerm);
-                ceny_v(i,j,k) = AdvectionTerm_vel * 0.25*(momy(i,j,k)+momy(i,j+1,k))*(vely(i,j,k)+vely(i,j+1,k)) + pressure * (1-PressureTerm);
-                cenz_w(i,j,k) = AdvectionTerm_vel * 0.25*(momz(i,j,k)+momz(i,j,k+1))*(velz(i,j,k)+velz(i,j,k+1)) + pressure * (1-PressureTerm);
+                cenx_u(i,j,k) = AdvectionTerm_vel * 0.25*(momx(i,j,k)+momx(i+1,j,k))*(velx(i,j,k)+velx(i+1,j,k)) + pressure * PressureTerm;
+                ceny_v(i,j,k) = AdvectionTerm_vel * 0.25*(momy(i,j,k)+momy(i,j+1,k))*(vely(i,j,k)+vely(i,j+1,k)) + pressure * PressureTerm;
+                cenz_w(i,j,k) = AdvectionTerm_vel * 0.25*(momz(i,j,k)+momz(i,j,k+1))*(velz(i,j,k)+velz(i,j,k+1)) + pressure * PressureTerm;
             });
 
     } // end mfi

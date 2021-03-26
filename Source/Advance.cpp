@@ -132,7 +132,7 @@ ERF::advance(Real time, Real dt, int amr_iteration, int amr_ncycle)
   // *****************************************************************
 
   // reverse flow
-  if ((time + 1e-7) > 0.8 && true)
+  if ((time + 1e-7) > 0.8 && false)
   {
     dt = -dt;
     amrex::Print() << "Advancing with -dt!!!! " << dt << std::endl;
