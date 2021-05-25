@@ -36,6 +36,14 @@ pc_initdata(
   const amrex::Real y = prob_lo[1] + (j + 0.5) * dx[1];
   const amrex::Real z = prob_lo[2] + (k + 0.5) * dx[2];
 
+  // Define a point (xc,yc,zc) at the (0.25,0.5,0.5)
+  const amrex::Real xc = 0.1 * (prob_lo[0] + prob_hi[0]);
+  const amrex::Real yc = 0.5 * (prob_lo[1] + prob_hi[1]);
+  const amrex::Real zc = 0.5 * (prob_lo[2] + prob_hi[2]);
+
+  // 2D problem
+  const amrex::Real r = std::sqrt((x - xc) * (x - xc) + (y - yc) * (y - yc));
+
   // Set the density
   state(i, j, k, Density_comp) = ProbParm::rho_0;
 
@@ -43,7 +51,9 @@ pc_initdata(
   state(i, j, k, Theta_comp) = ProbParm::T_0;
 
   // Set scalar = non-zero in a disk of radius r0 and 0 elsewhere
-  state(i, j, k, Scalar_comp) = ProbParm::A_0 * sin(x);
+  const amrex::Real r0 = 0.2;
+  state(i, j, k, Scalar_comp) =
+    ProbParm::A_0 * exp(-1.*r*r);
 }
 
 AMREX_GPU_DEVICE

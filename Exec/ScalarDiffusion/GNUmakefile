@@ -13,14 +13,14 @@ MEM_PROFILE = FALSE
 USE_GPROF = FALSE
 
 # Performance
-USE_MPI = TRUE
+USE_MPI = FALSE
 USE_OMP = FALSE
 USE_CUDA = FALSE
 USE_HIP = FALSE
 USE_DPCPP = FALSE
 
 # Debugging
-DEBUG = FALSE
+DEBUG = TRUE
 
 # GNU Make
 Bpack := ./Make.package

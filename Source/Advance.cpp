@@ -55,6 +55,21 @@ ERF::advance(Real time, Real dt, int amr_iteration, int amr_ncycle)
   MultiFab& V_new = get_new_data(Y_Vel_Type);
   MultiFab& W_new = get_new_data(Z_Vel_Type);
 
+  int nx = geom.Domain().bigEnd(0);
+  int nvars = S_old.nComp(); 
+
+  for ( MFIter mfi(S_old,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        
+    const Box& bx = mfi.tilebox();
+    const Box& tbx = mfi.nodaltilebox(0);
+    const Box& tby = mfi.nodaltilebox(1);
+    const Box& tbz = mfi.nodaltilebox(2);
+
+    const Array4<Real> & cu = S_old.array(mfi);
+    //amrex::Print() << "Advance before periodic cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+  }
+
+
   // Fill level 0 ghost cells (including at periodic boundaries)
   S_old.FillBoundary(geom.periodicity());
   U_old.FillBoundary(geom.periodicity());
@@ -62,10 +77,32 @@ ERF::advance(Real time, Real dt, int amr_iteration, int amr_ncycle)
   W_old.FillBoundary(geom.periodicity());
 
   const Real* dx = geom.CellSize();
+  for ( MFIter mfi(S_old,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        
+    const Box& bx = mfi.tilebox();
+    const Box& tbx = mfi.nodaltilebox(0);
+    const Box& tby = mfi.nodaltilebox(1);
+    const Box& tbz = mfi.nodaltilebox(2);
+
+    const Array4<Real> & cu = S_old.array(mfi);
+    //amrex::Print() << "Advance before b.c cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+
+    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      // Dirichlet
+      //cu(-1,j,k,Scalar_comp) = 0.0*2 - cu(0,j,k,Scalar_comp);
+      //cu(nx+1,j,k,Scalar_comp) = 1.0*2 - cu(nx,j,k,Scalar_comp);
+      // Neumann
+      cu(-1,j,k,Scalar_comp) = 0.0*(*dx) + cu(0,j,k,Scalar_comp);
+      cu(nx+1,j,k,Scalar_comp) = 1.0*(*dx) + cu(nx,j,k,Scalar_comp);
+    });
+    //amrex::Print() << "Advance after b.c cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+  }
+
   const BoxArray&            ba = S_old.boxArray();
   const DistributionMapping& dm = S_old.DistributionMap();
 
-  int nvars = S_old.nComp();
+  //int nvars = S_old.nComp();
 
   // Place-holder for source array -- for now just set to 0
   MultiFab source(ba,dm,nvars,1); 

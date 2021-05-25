@@ -75,6 +75,28 @@ void RK3_advance(MultiFab& cons_old,  MultiFab& cons_new,
     // ************************************************************************************** 
     cons_old.FillBoundary(geom.periodicity());
 
+    int nx = geom.Domain().bigEnd(0);
+    for ( MFIter mfi(cons_old,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        const Box& bx = mfi.tilebox();
+        const Box& tbx = mfi.nodaltilebox(0);
+        const Box& tby = mfi.nodaltilebox(1);
+        const Box& tbz = mfi.nodaltilebox(2);
+
+        const Array4<Real> & cu = cons_old.array(mfi);
+        //amrex::Print() << "RK3_driver 1 before b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+
+        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            // Dirichlet
+            //cu(-1,j,k,Scalar_comp) = 0.0*2 - cu(0,j,k,Scalar_comp);
+            //cu(nx+1,j,k,Scalar_comp) = 1.0*2 - cu(nx,j,k,Scalar_comp);
+            // Neumann
+            cu(-1,j,k,Scalar_comp) = 0.0*(*dxp) + cu(0,j,k,Scalar_comp);
+            cu(nx+1,j,k,Scalar_comp) = 1.0*(*dxp) + cu(nx,j,k,Scalar_comp);
+        });
+        //amrex::Print() << "RK3_driver 1 after b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+    }
+
     VelocityToMomentum(xvel_old, yvel_old, zvel_old, cons_old, xmom_old, ymom_old, zmom_old);
 
     xmom_old.FillBoundary(geom.periodicity());
@@ -167,6 +189,26 @@ void RK3_advance(MultiFab& cons_old,  MultiFab& cons_new,
     zmom_update_1.FillBoundary(geom.periodicity());
 
     cons_upd_1.FillBoundary(geom.periodicity());
+    for ( MFIter mfi(cons_upd_1,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        const Box& bx = mfi.tilebox();
+        const Box& tbx = mfi.nodaltilebox(0);
+        const Box& tby = mfi.nodaltilebox(1);
+        const Box& tbz = mfi.nodaltilebox(2);
+
+        const Array4<Real> & cu = cons_upd_1.array(mfi);
+        //amrex::Print() << "RK3_driver 2 before b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+
+        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            // Dirichlet
+            //cu(-1,j,k,Scalar_comp) = 0.0*2 - cu(0,j,k,Scalar_comp);
+            //cu(nx+1,j,k,Scalar_comp) = 1.0*2 - cu(nx,j,k,Scalar_comp);
+            // Neumann
+            cu(-1,j,k,Scalar_comp) = 0.0*(*dxp) + cu(0,j,k,Scalar_comp);
+            cu(nx+1,j,k,Scalar_comp) = 1.0*(*dxp) + cu(nx,j,k,Scalar_comp);
+        });
+        //amrex::Print() << "RK3_driver 2 after b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+    }
 
     // ************************************************************************************** 
     // 
@@ -255,6 +297,26 @@ void RK3_advance(MultiFab& cons_old,  MultiFab& cons_new,
     zmom_update_2.FillBoundary(geom.periodicity());
 
     cons_upd_2.FillBoundary(geom.periodicity());
+    for ( MFIter mfi(cons_upd_2,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        const Box& bx = mfi.tilebox();
+        const Box& tbx = mfi.nodaltilebox(0);
+        const Box& tby = mfi.nodaltilebox(1);
+        const Box& tbz = mfi.nodaltilebox(2);
+
+        const Array4<Real> & cu = cons_upd_2.array(mfi);
+        //amrex::Print() << "RK3_driver 3 before b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+
+        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            // Dirichlet
+            //cu(-1,j,k,Scalar_comp) = 0.0*2 - cu(0,j,k,Scalar_comp);
+            //cu(nx+1,j,k,Scalar_comp) = 1.0*2 - cu(nx,j,k,Scalar_comp);
+            // Neumann
+            cu(-1,j,k,Scalar_comp) = 0.0*(*dxp) + cu(0,j,k,Scalar_comp);
+            cu(nx+1,j,k,Scalar_comp) = 1.0*(*dxp) + cu(nx,j,k,Scalar_comp);
+        });
+        //amrex::Print() << "RK3_driver 3 after b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+    }
 
     // ************************************************************************************** 
     // 
@@ -342,5 +404,25 @@ void RK3_advance(MultiFab& cons_old,  MultiFab& cons_new,
     zmom_new.FillBoundary(geom.periodicity());
 
     cons_new.FillBoundary(geom.periodicity());
+    for ( MFIter mfi(cons_new,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        const Box& bx = mfi.tilebox();
+        const Box& tbx = mfi.nodaltilebox(0);
+        const Box& tby = mfi.nodaltilebox(1);
+        const Box& tbz = mfi.nodaltilebox(2);
+
+        const Array4<Real> & cu = cons_new.array(mfi);
+        //amrex::Print() << "RK3_driver 4 before b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+
+        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            // Dirichlet
+            //cu(-1,j,k,Scalar_comp) = 0.0*2 - cu(0,j,k,Scalar_comp);
+            //cu(nx+1,j,k,Scalar_comp) = 1.0*2 - cu(nx,j,k,Scalar_comp);
+            // Neumann
+            cu(-1,j,k,Scalar_comp) = 0.0*(*dxp) + cu(0,j,k,Scalar_comp);
+            cu(nx+1,j,k,Scalar_comp) = 1.0*(*dxp) + cu(nx,j,k,Scalar_comp);
+        });
+        //amrex::Print() << "RK3_driver 4 after b.c. cu = " << cu(0,0,0,Scalar_comp) <<  "  " << cu(-1,0,0,Scalar_comp) << "  " << cu(nx,0,0,Scalar_comp) <<  "  " << cu(nx+1,0,0,Scalar_comp) << std::endl;
+    }
     MomentumToVelocity(xvel_new, yvel_new, zvel_new, cons_new, xmom_new, ymom_new, zmom_new);
 }
